@@ -209,7 +209,7 @@ const randomStart = Math.floor(Math.random() * 180000);
 }
 async function playPodcast(player){
   player.pause();
-  const apiKey = 'ed6a33d6c41549a9ac0436d45af06b0b';
+  const apiKey = '';
   try {
       // Fetch episodes.json file
       const response = await fetch('podcasts.json');
