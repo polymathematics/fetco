@@ -2,6 +2,7 @@
 a new kind of radio that brings seredipity back to music and podcast discovery. simply scan the airwaves to get dropped into wonderful music or conversations. connects to your spotify so that every station is always perfectly suited for you. uses listen notes api for fetching podcasts. 
 <img width="663" alt="Screenshot 2024-07-09 at 8 24 34 AM" src="https://github.com/polymathematics/fetco/assets/58536863/64a2724f-8ec2-49fa-9978-91bd7af6c61e">
 # roadmap
+- automatically reauthorize after an hour instead of requiring user to refresh browser
 - RSS support for keeping podcasts up to date
 - info cards for getting more info about what you are hearing
 - add ads
@@ -22,19 +23,19 @@ a new kind of radio that brings seredipity back to music and podcast discovery. 
 
 2. **Playback Control**
 
-   - **initializePlayer(accessToken)**: Initializes the Spotify Web Playback SDK player and connects it to the user's device.
+   - **initializePlayer(accessToken)**: Initializes the Spotify Web Playback SDK player and connects it. This is what makes Fetco available as a connected device within Spotify. We then select it as the device by calling transferPlaybackToDevice.
 
-   - **playMusic(player)**: Plays a random music track using the Spotify API, skips to the next track, adjusts volume, and seeks to a random start time.
+   - **playMusic(player)**: Plays a track using the Spotify API, adjusts volume, and seeks to a random start time before playing. Due to Spotify limitations, this currently utilizes the listener's existing Spotify queue.
 
-   - **playPodcast(player)**: Plays a random podcast episode fetched from a JSON file using the Listen Notes API.
+   - **playPodcast(player)**: Plays a random podcast episode fetched from the podcast JSON file using the Listen Notes API and seeks to a random start time (less than or equal to 16 mins into ep).
 
-   - **transferPlaybackToDevice(accessToken, deviceId)**: Transfers playback to a specified device using the Spotify API.
+   - **transferPlaybackToDevice(accessToken, deviceId)**: Transfers playback to Fetco automatically, using the Spotify API.
 
 3. **Content Decision and Playback Execution**
 
-   - **contentDecision(player)**: Randomly selects between playing music or a podcast based on predefined content types.
+   - **contentDecision(player)**: Randomly selects between playing music or a podcast and triggers either playMusic or playPodcast.
 
-   - **scan()**: Initiates content decision and playback.
+   - **scan()**: Triggers when a listener selects the scan knob. Initiates content decision and playback.
 
    - **powerButton(player)**: Toggles the application on or off based on a local storage flag, initiates content decision and playback when turned on.
 
@@ -44,11 +45,10 @@ a new kind of radio that brings seredipity back to music and podcast discovery. 
 
    - **generateCodeChallenge(codeVerifier)**: Generates a code challenge for OAuth authorization using SHA-256 hashing.
 
-5. **Event Handling and Initialization**
+5. **Event Handling**
 
-   - **Player event listeners**: Listens for events such as player readiness and handles playback initiation and device connection.
+   - **Player event listeners**: Fetco utilizes event listeners throughout for events such as Spotify player readiness.
 
-   - **Handling user interactions**: Manages user interactions like starting playback, changing stations, and turning the app on or off.
 
 ### Notes
 
@@ -56,4 +56,3 @@ a new kind of radio that brings seredipity back to music and podcast discovery. 
 - It integrates with the Listen Notes API for fetching and playing podcast episodes.
 - Local storage is used for maintaining authentication state and application settings.
 
-This documentation should provide a clear overview of how each function contributes to the overall functionality of your application. Adjust as needed to reflect any specific nuances or additional details in your implementation.
