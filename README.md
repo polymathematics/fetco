@@ -9,3 +9,4 @@ a new kind of radio that brings seredipity back to music and podcast discovery. 
 - add ads
 - magic rewind button to go back to the start of a song or podcast if you really love it
 - options for people who don't use Spotify
+- pause button
