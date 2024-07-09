@@ -28,7 +28,7 @@ const generateCodeChallenge = async codeVerifier => {
   return base64encode(digest);
 };
 const redirectUrl = 'https://43e6f216-7d25-4b81-b48d-2e1a1569c597-00-1iyblkb115r3i.riker.replit.dev/';
-const clientId = 'e13ab6159fc1495a8a04998c30a68d61';
+const clientId = '';
 async function authorize() {
   const codeVerifier = generateRandomString(128);
   localStorage.setItem('code_verifier', codeVerifier);
