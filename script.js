@@ -1,11 +1,14 @@
 if (!localStorage.getItem("isFirstTime")){
-let isFirstTime = localStorage.setItem("isFirstTime", "true");
+ isFirstTime = localStorage.setItem("isFirstTime", "true");
 }
 let player;
 let podcast = document.getElementById("podcast");
+let childName = localStorage.getItem('childName');
+let parentName = localStorage.getItem('parentName');
+let superName = localStorage.getItem('superName');
+let isOn = localStorage.setItem('isOn', false)
 // Check if user is authenticated
 const isAuthed = localStorage.getItem('auth');
-console.log(isAuthed);
 //spotify auth stuff
 const generateRandomString = length => {
   let text = '';
@@ -27,8 +30,8 @@ const generateCodeChallenge = async codeVerifier => {
   const digest = await crypto.subtle.digest('SHA-256', data);
   return base64encode(digest);
 };
-const redirectUrl = 'https://43e6f216-7d25-4b81-b48d-2e1a1569c597-00-1iyblkb115r3i.riker.replit.dev/';
-const clientId = '';
+const redirectUrl = 'https://fetco.replit.app';
+const clientId = 'e13ab6159fc1495a8a04998c30a68d61';
 async function authorize() {
   const codeVerifier = generateRandomString(128);
   localStorage.setItem('code_verifier', codeVerifier);
@@ -43,7 +46,7 @@ async function authorize() {
     code_challenge_method: 'S256',
     code_challenge: codeChallenge
   });
-  const isAuthed = localStorage.setItem('auth', true);
+  localStorage.setItem('auth', true);
   // Launch Spotify authorization window
   window.location = 'https://accounts.spotify.com/authorize?' + args;
 }
@@ -64,7 +67,7 @@ async function handleRedirect() {
     const codeVerifier = localStorage.getItem('code_verifier');
     if (!codeVerifier) {
       console.error('Code verifier not found in local storage.');
-      return;
+      authorize();
     }
 
     const body = new URLSearchParams({
@@ -169,7 +172,9 @@ function playMusic(player){
 podcast.pause();
 const accessToken = localStorage.getItem('access_token');
 const randomStart = Math.floor(Math.random() * 180000);
-
+  player.setVolume(0.0).then(() => {
+    console.log('muted anything playing');
+  });
   // Skip to the next track
   player.nextTrack().then(() => {
     console.log('Skipped to the next track');
@@ -181,13 +186,14 @@ const randomStart = Math.floor(Math.random() * 180000);
 
         // Seek to the random start time with a delay
         setTimeout(() => {
+          let track = localStorage.getItem('childName');
           player.seek(randomStart).then(() => {
           console.log(`Seeked to ${randomStart}ms`);
         document.getElementById('scan-noise').play();
             // Set volume back to 0.5 with a delay
             setTimeout(() => {
               player.setVolume(0.5).then(() => {
-                console.log(`Playing track: ${track.uri} from ${randomStart}ms`);
+                getSongInfo();
               }).catch(error => {
                 console.error('Error setting volume to 0.5:', error);
               });
@@ -207,9 +213,40 @@ const randomStart = Math.floor(Math.random() * 180000);
   });
 
 }
+async function getSongInfo(){
+  const accessToken = localStorage.getItem('access_token');
+  // fetch song info
+  fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`
+    }
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('Currently Playing:', data.item.name);
+    console.log('Currently Playing:', data.item.artists[0].name);
+    console.log('Currently Playing:', data.item.album.name);
+    childName = data.item.name;
+    parentName = data.item.artists[0].name;
+    superName = data.item.album.name;
+    localStorage.setItem('childName', childName);
+    localStorage.setItem('parentName', parentName);
+    localStorage.setItem('superName', superName);
+  })
+  .catch(error => {
+    console.error('There was a problem with the fetch operation:', error);
+    authorize();
+  });
+}
 async function playPodcast(player){
   player.pause();
-  const apiKey = '';
+  const apiKey = 'ed6a33d6c41549a9ac0436d45af06b0b';
   try {
       // Fetch episodes.json file
       const response = await fetch('podcasts.json');
@@ -223,7 +260,12 @@ async function playPodcast(player){
       // Select a random episode
       const randomEp = episodes[Math.floor(Math.random() * episodes.length)];
       const episodeId = randomEp.episodeId;
-
+      childName = randomEp.episodeTitle;
+      parentName = randomEp.podcastName;
+      superName = '';
+      localStorage.setItem('childName', childName);
+      localStorage.setItem('parentName', parentName);
+      localStorage.setItem('superName', superName);
       // Fetch episode details using Listen API
       const episodeResponse = await fetch(`https://listen-api.listennotes.com/api/v2/episodes/${episodeId}?show_transcript=0`, {
         method: 'GET',
@@ -274,7 +316,7 @@ function contentDecision(player){
 function scan(){
 contentDecision(player);
 }
-function turnOff(player){
+function turnOff(){
 const podcastPlaying = document.getElementById('podcast');
 player.pause();
 podcastPlaying.pause();
@@ -282,6 +324,7 @@ podcastPlaying.pause();
 function powerButton() {
   console.log("Power button clicked");
   let isOn = localStorage.getItem('isOn');
+  console.log(isOn);
   // Assume the radio is off if 'isOn' is null
   if (isOn === null) {
     isOn = "false";
@@ -293,14 +336,49 @@ function powerButton() {
     contentDecision(player);
   } else {
     localStorage.setItem('isOn', false);
-    turnOff(player);
-
+    turnOff();
     }
 }
 function changeStation(){
   console.log("Station changed");
   //findContent();
 }
-
-
-
+function tokenRefresh(){
+  localStorage.setItem('auth', false);
+  location.reload();
+}
+setTimeout(tokenRefresh, 3540000);
+async function getInfo(){
+  await getSongInfo();
+  const childNameElement = document.getElementById('childName');
+  const parentNameElement = document.getElementById('parentName');
+  const superNameElement = document.getElementById('superName');
+  const unexpandedInfo = document.getElementById('unexpanded-info');
+  const expandedInfo = document.getElementById('expanded-info');
+  childNameElement.innerHTML = childName;
+  parentNameElement.innerHTML = parentName;
+  superNameElement.innerHTML = superName;
+  unexpandedInfo.style.display = 'none';
+  expandedInfo.style.display = 'flex';
+}
+function hideInfo(){
+  const childNameElement = document.getElementById('childName');
+  const parentNameElement = document.getElementById('parentName');
+  const superNameElement = document.getElementById('superName');
+  const unexpandedInfo = document.getElementById('unexpanded-info');
+  const expandedInfo = document.getElementById('expanded-info');
+  childNameElement.innerHTML = '';
+  parentNameElement.innerHTML = '';
+  superNameElement.innerHTML = '';
+  unexpandedInfo.style.display = 'flex';
+  expandedInfo.style.display = 'none';
+}
+setInterval(getSongInfo, 60000);
+// before user exits, clear cache
+window.addEventListener('beforeunload', function(event) {
+  event.preventDefault();
+  if (isAuthed === "true"){
+  localStorage.setItem('auth', false);
+  console.log('closing window');
+  }
+});
